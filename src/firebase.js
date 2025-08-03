@@ -1,0 +1,106 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getFirestore, collection, setDoc, doc, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js"
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+function generateUniqueId() {
+  const a = "1234567890".split("");
+  let b = "";
+  let f = "";
+  let g = "";
+  let d = 0;
+  let e = 0;
+  let l = 0;
+  for (let c = 0; c <= 4; c++) {
+    d = Math.floor(Math.random() * (a.length - 1));
+    e = Math.floor(Math.random() * (a.length - 1));
+    l = Math.floor(Math.random() * (a.length - 1));
+    b += a[d];
+    f += a[e];
+    g += a[l];
+  }
+  return b + "-" + f + "-" + g;
+}
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA6gkVmMcbZybHoAEWVD4bKa8Pllo-ARR8",
+  authDomain: "webrtc-project-f6fa8.firebaseapp.com",
+  projectId: "webrtc-project-f6fa8",
+  storageBucket: "webrtc-project-f6fa8.firebasestorage.app",
+  messagingSenderId: "1025853139038",
+  appId: "1:1025853139038:web:e6b6752c0b0eaa12466ccf",
+  measurementId: "G-0B51NWD63K"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const servers = {
+  iceServers: [
+      {
+          urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302']
+      }
+  ],
+  iceCandidatePoolSize: 10,
+}
+
+// Global states
+
+let pc = new RTCPeerConnection(servers);
+
+const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
+
+const uniqueId = generateUniqueId();
+
+console.log(uniqueId);
+document.getElementById("callId").textContent = uniqueId;
+
+const callDoc = await doc(db, "calls", uniqueId);
+// const answerDoc = await doc(db, "calls", "answer");
+
+stream.getTracks().forEach(track => {
+  pc.addTrack(track, stream);
+})
+
+const offer = await pc.createOffer();
+try {
+  pc.setLocalDescription(offer).then( async () => {
+      const docRef = await setDoc(callDoc, offer);
+      console.log("Added offer description.")
+  });
+} catch(e) {
+  console.log("Error adding document: ", e)
+}
+
+const offerCandidateRef = await collection(callDoc, "offerCandidates");
+const answerCandidateRef = await collection(callDoc, "answerCandidates");
+
+pc.onicecandidate = event => {
+  if (event.candidate) {
+    addDoc(offerCandidateRef, event.candidate.toJSON())
+    .then(console.log("Added offer candidate."))
+    .catch(e => {console.log("Something happended! Error: ", e)});
+  }
+}
+
+const snapshotRef = onSnapshot(callDoc, (snapshot) => {
+  const answer = snapshot.data();
+  if (!pc.currentRemoteDescription && answer.type === "answer") {
+    pc.setRemoteDescription(answer);
+    console.log("Answer received");
+  }
+})
+
+const snapshotRemoteCandidate = onSnapshot(answerCandidateRef, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === "added") {
+      pc.addIceCandidate(change.doc.data());
+      console.log("Added answer ICE candidates");
+    }
+  })
+})

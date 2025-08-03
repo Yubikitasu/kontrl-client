@@ -1,9 +1,10 @@
 const video = document.querySelector('video')
 
+// Initialize Firebase
+
 navigator.mediaDevices.getDisplayMedia({
-    audio: true,
+    audio: false,
     video: {
-        
         frameRate: 30
     }
 }).then(stream => {
