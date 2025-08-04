@@ -79,6 +79,7 @@ try {
 
 const offerCandidateRef = await collection(callDoc, "offerCandidates");
 const answerCandidateRef = await collection(callDoc, "answerCandidates");
+const mouseRef = await collection(callDoc, "mouse");
 
 pc.onicecandidate = event => {
   if (event.candidate) {
@@ -102,5 +103,14 @@ const snapshotRemoteCandidate = onSnapshot(answerCandidateRef, (snapshot) => {
       pc.addIceCandidate(change.doc.data());
       console.log("Added answer ICE candidates");
     }
+  })
+})
+
+const snapshotMouse = onSnapshot(mouseRef, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    const mousePositionX = change.doc.data().x;
+    const mousePositionY = change.doc.data().x;
+    window.mouseApi.moveMouse(mousePositionX, mousePositionY);
+    console.log("Moved mouse to position ", mousePositionX, mousePositionY);
   })
 })

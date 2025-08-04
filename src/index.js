@@ -1,7 +1,9 @@
-const { app, BrowserWindow, session, desktopCapturer } = require('electron')
+const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron')
+const robot = require("robotjs");
+
 const path = require('path');
 
-const createWindow = () => {
+const createWindow = async () => {
   const win = new BrowserWindow({
     width: 1080,
     height: 750,
@@ -30,5 +32,10 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
 })
+
+// Respond to renderer's mouse move request
+ipcMain.on('move-mouse', (event, x, y) => {
+  robot.moveMouse(x, y);
+});
