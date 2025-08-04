@@ -69,6 +69,19 @@ stream.getTracks().forEach(track => {
   pc.addTrack(track, stream);
 })
 
+const dataStream = await pc.createDataChannel("input");
+
+// dataStream.onopen = () => {
+//   console.log("✅ DataChannel open on client");
+//   dataStream.send("Hello from client!");
+// };
+
+dataStream.onmessage = (e) => {
+  const mousePosition = JSON.parse(e.data);
+  window.mouseApi.moveMouse(parseFloat(mousePosition.x), parseFloat(mousePosition.y));
+}
+
+
 const offer = await pc.createOffer();
 try {
   pc.setLocalDescription(offer).then( async () => {
@@ -103,16 +116,16 @@ const snapshotRemoteCandidate = onSnapshot(answerCandidateRef, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
     if (change.type === "added") {
       pc.addIceCandidate(change.doc.data());
-      console.log("Added answer ICE candidates");
+      console.log("Added answer ICE candidate: ", change.doc.data());
     }
   })
 })
 
-const snapshotMouse = onSnapshot(mouseRef, (snapshot) => {
-  snapshot.docChanges().forEach((change) => {
-    const mousePositionX = change.doc.data().x;
-    const mousePositionY = change.doc.data().y;
-    window.mouseApi.moveMouse(parseFloat(mousePositionX), parseFloat(mousePositionY));
-    console.log("Moved mouse to position ", mousePositionX, mousePositionY);
-  })
-})
+// const snapshotMouse = onSnapshot(mouseRef, (snapshot) => {
+//   snapshot.docChanges().forEach((change) => {
+//     const mousePositionX = change.doc.data().x;
+//     const mousePositionY = change.doc.data().y;
+//     window.mouseApi.moveMouse(parseFloat(mousePositionX), parseFloat(mousePositionY));
+//     console.log("Moved mouse to position ", mousePositionX, mousePositionY);
+//   })
+// })
