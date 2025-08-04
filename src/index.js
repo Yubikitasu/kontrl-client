@@ -1,5 +1,6 @@
 const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron')
-const robot = require("robotjs");
+const { mouse, Button, Point } = require('@nut-tree-fork/nut-js');
+
 
 const path = require('path');
 
@@ -36,6 +37,7 @@ app.whenReady().then(() => {
 })
 
 // Respond to renderer's mouse move request
-ipcMain.on('move-mouse', (event, x, y) => {
-  robot.moveMouse(x, y);
+ipcMain.on('move-mouse', async (event, x, y) => {
+  // robot.moveMouse(x, y);
+  await mouse.setPosition(new Point(x, y));
 });

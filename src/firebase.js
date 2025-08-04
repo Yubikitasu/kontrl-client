@@ -110,7 +110,7 @@ const snapshotMouse = onSnapshot(mouseRef, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
     const mousePositionX = change.doc.data().x;
     const mousePositionY = change.doc.data().x;
-    window.mouseApi.moveMouse(mousePositionX, mousePositionY);
+    window.mouseApi.moveMouse(parseFloat(mousePositionX), parseFloat(mousePositionY));
     console.log("Moved mouse to position ", mousePositionX, mousePositionY);
   })
 })
