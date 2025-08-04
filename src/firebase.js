@@ -7,6 +7,21 @@ import { getFirestore, collection, setDoc, doc, onSnapshot, addDoc, deleteDoc } 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCGGgiJUYXy-LIW6YdQRhDXJYc5CWsq_OE",
+  authDomain: "desktop-control-46b64.firebaseapp.com",
+  projectId: "desktop-control-46b64",
+  storageBucket: "desktop-control-46b64.firebasestorage.app",
+  messagingSenderId: "95801441442",
+  appId: "1:95801441442:web:2ed1fca0974d50115aabfb",
+  measurementId: "G-KTD4WK0YLZ"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 function generateUniqueId() {
   const a = "1234567890".split("");
   let b = "";
@@ -26,19 +41,6 @@ function generateUniqueId() {
   return b + "-" + f + "-" + g;
 }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA6gkVmMcbZybHoAEWVD4bKa8Pllo-ARR8",
-  authDomain: "webrtc-project-f6fa8.firebaseapp.com",
-  projectId: "webrtc-project-f6fa8",
-  storageBucket: "webrtc-project-f6fa8.firebasestorage.app",
-  messagingSenderId: "1025853139038",
-  appId: "1:1025853139038:web:e6b6752c0b0eaa12466ccf",
-  measurementId: "G-0B51NWD63K"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 const servers = {
   iceServers: [
