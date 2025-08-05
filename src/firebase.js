@@ -78,9 +78,10 @@ const dataStream = await pc.createDataChannel("input");
 
 dataStream.onmessage = (e) => {
   const inputInfo = JSON.parse(e.data);
-  // if (inputInfo.type === "mousemove") {
-  //   window.mouseApi.moveMouse(parseFloat(inputInfo.x), parseFloat(inputInfo.y));
-  // }
+  if (inputInfo.type === "mousemove") {
+    window.mouseApi.moveMouse(parseFloat(inputInfo.x), parseFloat(inputInfo.y));
+  }
+  
   if (inputInfo.type === "mousedown") {
     window.mouseApi.pressButton(inputInfo.button);
   }
