@@ -89,17 +89,11 @@ ipcMain.on("mouseup", async (event, button) => {
 });
 
 ipcMain.on("keydown", async (event, key) => {
-  if (keyPressed === false) {
-    await keyboard.pressKey(Key[key]);
-    console.log("key pressed: ", key);
-    keyPressed = true;
-  }
+  await keyboard.pressKey(Key[key]);
+  console.log("key pressed: ", key);
 });
 
 ipcMain.on("keyup", async (event, key) => {
-  if (keyPressed === true) {
-    await keyboard.releaseKey(Key[key]);
-    console.log("key released: ", key);
-    keyPressed = false;
-  }
+  await keyboard.releaseKey(Key[key]);
+  console.log("key released: ", key);
 });
