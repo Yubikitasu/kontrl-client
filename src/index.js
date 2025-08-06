@@ -88,12 +88,43 @@ ipcMain.on("mouseup", async (event, button) => {
   }
 });
 
+const specialKeyMap = {
+  "ENTER": "Enter",
+  "SPACE": "Space",
+  "TAB": "Tab",
+  "SHIFT": "Shift",
+  "CTRL": "LeftControl",
+  "CONTROL": "LeftControl",
+  "ALT": "LeftAlt",
+  "ESC": "Escape",
+  "ESCAPE": "Escape",
+  "UP": "Up",
+  "DOWN": "Down",
+  "LEFT": "Left",
+  "RIGHT": "Right",
+  "BACKSPACE": "Backspace",
+  "DELETE": "Delete",
+  "CAPSLOCK": "CapsLock",
+  "F1": "F1",
+  "F2": "F2",
+  "F3": "F3",
+  // Add more if needed
+};
+
 ipcMain.on("keydown", async (event, key) => {
-  await keyboard.pressKey(Key[key]);
+  const normalized = key.trim().toUpperCase();
+
+  const mappedKeyName = specialKeyMap[normalized] || normalized;
+
+  await keyboard.pressKey(Key[mappedKeyName]);
   console.log("key pressed: ", key);
 });
 
 ipcMain.on("keyup", async (event, key) => {
-  await keyboard.releaseKey(Key[key]);
+  const normalized = key.trim().toUpperCase();
+
+  const mappedKeyName = specialKeyMap[normalized] || normalized;
+  
+  await keyboard.releaseKey(Key[mappedKeyName]);
   console.log("key released: ", key);
 });
