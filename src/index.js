@@ -5,7 +5,7 @@ const {
   desktopCapturer,
   ipcMain,
 } = require("electron");
-const { mouse, Button, Point } = require("@nut-tree-fork/nut-js");
+const { mouse, Button, Point, keyboard, Key } = require("@nut-tree-fork/nut-js");
 
 const path = require("path");
 
@@ -50,6 +50,7 @@ ipcMain.on("move-mouse", async (event, x, y) => {
 });
 
 let mousePressed = false;
+let keyPressed = false;
 
 ipcMain.on("mousedown", async (event, button) => {
   if (mousePressed === false) {
@@ -84,5 +85,21 @@ ipcMain.on("mouseup", async (event, button) => {
     }
     console.log("button released");
     mousePressed = false;
+  }
+});
+
+ipcMain.on("keydown", async (event, key) => {
+  if (keyPressed === false) {
+    await keyboard.pressKey(Key[key]);
+    console.log("key pressed: ", key);
+    keyPressed = true;
+  }
+});
+
+ipcMain.on("keyup", async (event, key) => {
+  if (keyPressed === true) {
+    await keyboard.releaseKey(Key[key]);
+    console.log("key released: ", key);
+    keyPressed = false;
   }
 });

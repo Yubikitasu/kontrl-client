@@ -79,15 +79,24 @@ const dataStream = await pc.createDataChannel("input");
 dataStream.onmessage = (e) => {
   const inputInfo = JSON.parse(e.data);
   if (inputInfo.type === "mousemove") {
-    window.mouseApi.moveMouse(parseFloat(inputInfo.x), parseFloat(inputInfo.y));
+    window.inputApi.moveMouse(parseFloat(inputInfo.x), parseFloat(inputInfo.y));
   }
   
   if (inputInfo.type === "mousedown") {
-    window.mouseApi.pressButton(inputInfo.button);
+    window.inputApi.pressButton(inputInfo.button);
   }
 
   if (inputInfo.type === "mouseup") {
-    window.mouseApi.releaseButton(inputInfo.button)
+    window.inputApi.releaseButton(inputInfo.button)
+  }
+
+  
+  if (inputInfo.type === "keydown") {
+    window.inputApi.pressKey(inputInfo.key);
+  }
+
+  if (inputInfo.type === "keyup") {
+    window.inputApi.releaseKey(inputInfo.key);
   }
 }
 
@@ -135,7 +144,7 @@ const snapshotRemoteCandidate = onSnapshot(answerCandidateRef, (snapshot) => {
 //   snapshot.docChanges().forEach((change) => {
 //     const inputInfoX = change.doc.data().x;
 //     const inputInfoY = change.doc.data().y;
-//     window.mouseApi.moveMouse(parseFloat(inputInfoX), parseFloat(inputInfoY));
+//     window.inputApi.moveMouse(parseFloat(inputInfoX), parseFloat(inputInfoY));
 //     console.log("Moved mouse to position ", inputInfoX, inputInfoY);
 //   })
 // })
