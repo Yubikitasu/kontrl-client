@@ -1,27 +1,18 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getFirestore, collection, setDoc, doc, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js"
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirestore, collection, setDoc, doc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js"
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCGGgiJUYXy-LIW6YdQRhDXJYc5CWsq_OE",
-  authDomain: "desktop-control-46b64.firebaseapp.com",
-  projectId: "desktop-control-46b64",
-  storageBucket: "desktop-control-46b64.firebasestorage.app",
-  messagingSenderId: "95801441442",
-  appId: "1:95801441442:web:2ed1fca0974d50115aabfb",
-  measurementId: "G-KTD4WK0YLZ"
-};
+// -------------------------------------------
+// IMPORTANT: Create your own Firebase project, 
+// then configure it in src/firebase-config.js.
+// -------------------------------------------
+import firebaseConfig from "./firebase-config.js";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Function to generate a unique ID for the call
+// This ID will be used to identify the call in the database
 function generateUniqueId() {
   const a = "1234567890".split("");
   let b = "";
@@ -41,7 +32,9 @@ function generateUniqueId() {
   return b + "-" + f + "-" + g;
 }
 
-
+// These are the STUN servers used for the WebRTC connection
+// I'm going to use Google's public STUN servers, which are free to use
+// You can use your own STUN servers if you want, but these should work fine for most cases
 const servers = {
   iceServers: [
       {
@@ -51,31 +44,40 @@ const servers = {
   iceCandidatePoolSize: 10,
 }
 
-// Global states
-
+// Create a new RTCPeerConnection
+// This will be used to establish the WebRTC connection with the remote peer
 let pc = new RTCPeerConnection(servers);
 
+// Video and audio stream sent to WebRTC
+// This will be used to send the screen and audio stream to the remote peer, which
+// is the client computer.
 const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
 
+
+// Function to generate a unique ID for the call
+// This ID will be used to identify the call in the database
 const uniqueId = generateUniqueId();
 
-console.log(uniqueId);
+// Display the unique ID in the HTML element with id "callId"
+// This will allow the user to verify the offer ID, establishing the connection
+// between the client and the server.
 document.getElementById("callId").textContent = uniqueId;
 
+// Reference to the Firestore document for the call
+// This will be used to store the offer and answer descriptions, as well as the ICE candidates
 const callDoc = await doc(db, "calls", uniqueId);
-// const answerDoc = await doc(db, "calls", "answer");
 
+// Adding the video and audio tracks to the WebRTC tracks.
 stream.getTracks().forEach(track => {
   pc.addTrack(track, stream);
 })
 
+// Getting the data stream for input events
+// This will be used to send mouse and keyboard events from the client to the server
 const dataStream = await pc.createDataChannel("input");
 
-// dataStream.onopen = () => {
-//   console.log("✅ DataChannel open on client");
-//   dataStream.send("Hello from client!");
-// };
-
+// Listen for messages on the data stream
+// This will be used to handle mouse and keyboard events sent from the client
 dataStream.onmessage = (e) => {
   const inputInfo = JSON.parse(e.data);
   if (inputInfo.type === "mousemove") {
@@ -100,21 +102,31 @@ dataStream.onmessage = (e) => {
   }
 }
 
-
+// Create an offer and set it as the local description
+// This will allow the local peer to send the offer to the remote peer, which will then
+// set it as the remote description and establish the connection
+// The offer will be stored in the Firestore database under the "calls" collection
+// Remote peers can catch the offer to get the offer and answer the connection,
+// which will then be sent back to us and set as the remote description
 const offer = await pc.createOffer();
 try {
   pc.setLocalDescription(offer).then( async () => {
-      const docRef = await setDoc(callDoc, offer);
+    // Set the offer in the Firestore database
+      await setDoc(callDoc, offer);
       console.log("Added offer description.")
   });
 } catch(e) {
   console.log("Error adding document: ", e)
 }
 
+// Create references for offer and answer ICE candidates
 const offerCandidateRef = await collection(callDoc, "offerCandidates");
 const answerCandidateRef = await collection(callDoc, "answerCandidates");
 const mouseRef = await collection(callDoc, "mouse");
 
+// Creating an offer ICE candidate reference
+// This will be used to send the ICE candidates to the remote peer, which the remote peer
+// will catch and add to its peer connection
 pc.onicecandidate = event => {
   if (event.candidate) {
     addDoc(offerCandidateRef, event.candidate.toJSON())
@@ -123,6 +135,8 @@ pc.onicecandidate = event => {
   }
 }
 
+// Catching the answer from the remote peer, then setting it as the remote description
+// This will allow the local peer to receive the answer and establish the connection
 const snapshotRef = onSnapshot(callDoc, (snapshot) => {
   const answer = snapshot.data();
   if (!pc.currentRemoteDescription && answer.type === "answer") {
@@ -131,6 +145,8 @@ const snapshotRef = onSnapshot(callDoc, (snapshot) => {
   }
 })
 
+// Catching the offer ICE candidates from the remote peer, then adding them to the peer connection ICE candidates
+// This will allow the local peer to establish the connection with the remote peer
 const snapshotRemoteCandidate = onSnapshot(answerCandidateRef, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
     if (change.type === "added") {
@@ -139,12 +155,3 @@ const snapshotRemoteCandidate = onSnapshot(answerCandidateRef, (snapshot) => {
     }
   })
 })
-
-// const snapshotMouse = onSnapshot(mouseRef, (snapshot) => {
-//   snapshot.docChanges().forEach((change) => {
-//     const inputInfoX = change.doc.data().x;
-//     const inputInfoY = change.doc.data().y;
-//     window.inputApi.moveMouse(parseFloat(inputInfoX), parseFloat(inputInfoY));
-//     console.log("Moved mouse to position ", inputInfoX, inputInfoY);
-//   })
-// })

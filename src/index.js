@@ -26,11 +26,6 @@ const createWindow = async () => {
         // // Grant access to the first screen found.
         callback({ video: sources[0], audio: "loopback" });
       });
-
-      // If true, use the system picker if available.
-      // Note: this is currently experimental. If the system picker
-      // is available, it will be used and the media request handler
-      // will not be invoked.
     },
     { useSystemPicker: true }
   );
@@ -45,14 +40,18 @@ app.whenReady().then(() => {
 
 // Respond to renderer's mouse move request
 ipcMain.on("move-mouse", async (event, x, y) => {
-  // robot.moveMouse(x, y);
   await mouse.setPosition(new Point(x, y));
 });
 
+// Handle mouse button press and release events
+// This prevents multiple presses of the same button without release
 let mousePressed = false;
-let keyPressed = false;
 
+// Since we can only use NutJS in the preload process,
+// we need to handle key events in the main process with ipcMain.
 ipcMain.on("mousedown", async (event, button) => {
+  // Only press the button if it is not already pressed
+  // This prevents multiple presses of the same button without release
   if (mousePressed === false) {
     if (button === "left") {
       await mouse.pressButton(Button.LEFT);
@@ -71,6 +70,8 @@ ipcMain.on("mousedown", async (event, button) => {
 });
 
 ipcMain.on("mouseup", async (event, button) => {
+  // Only release the button if it was pressed
+  // This prevents releasing a button that wasn't pressed
   if (mousePressed === true) {
     if (button === "left") {
       await mouse.releaseButton(Button.LEFT);
@@ -88,6 +89,7 @@ ipcMain.on("mouseup", async (event, button) => {
   }
 });
 
+// Handle keyboard events, mapping special keys to their Nut.js equivalents
 const specialKeyMap = {
   "ENTER": "Enter",
   " ": "Space",
@@ -120,9 +122,13 @@ const specialKeyMap = {
   "[": "LeftBracket",
   "]": "RightBracket",
   "`": "Backquote",
+
+  // Can add more, but these are the most common special keys
 };
 
 ipcMain.on("keydown", async (event, key) => {
+  // Normalize the key to uppercase to match the specialKeyMap
+  // This allows for case-insensitive matching, since NutJS keys are uppercase
   const normalized = key.toUpperCase();
 
   const mappedKeyName = specialKeyMap[normalized] || normalized;
