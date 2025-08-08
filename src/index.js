@@ -90,58 +90,130 @@ ipcMain.on("mouseup", async (event, button) => {
 });
 
 // Handle keyboard events, mapping special keys to their Nut.js equivalents
-const specialKeyMap = {
-  "ENTER": "Enter",
-  " ": "Space",
-  "TAB": "Tab",
-  "SHIFT": "Shift",
-  "CTRL": "LeftControl",
-  "CONTROL": "LeftControl",
-  "ALT": "LeftAlt",
-  "ESC": "Escape",
-  "ESCAPE": "Escape",
-  "UP": "Up",
-  "DOWN": "Down",
-  "LEFT": "Left",
-  "RIGHT": "Right",
-  "BACKSPACE": "Backspace",
-  "DELETE": "Delete",
-  "CAPSLOCK": "CapsLock",
-  "F1": "F1",
-  "F2": "F2",
-  "F3": "F3",
-  // Symbol aliases
-  ".": "Period",
-  ",": "Comma",
-  "/": "Slash",
-  "\\": "Backslash",
-  "-": "Minus",
-  "=": "Equal",
-  ";": "Semicolon",
-  "'": "Quote",
-  "[": "LeftBracket",
-  "]": "RightBracket",
-  "`": "Backquote",
+function mappedKey(input) {
+  const digitToKeyMap = {
+    "0": "Zero",
+    "1": "One",
+    "2": "Two",
+    "3": "Three",
+    "4": "Four",
+    "5": "Five",
+    "6": "Six",
+    "7": "Seven",
+    "8": "Eight",
+    "9": "Nine",
+  };
 
-  // Can add more, but these are the most common special keys
-};
+  const shiftedMap = {
+    "!": "One",
+    "@": "Two",
+    "#": "Three",
+    "$": "Four",
+    "%": "Five",
+    "^": "Six",
+    "&": "Seven",
+    "*": "Eight",
+    "(": "Nine",
+    ")": "Zero",
+    "_": "Minus",
+    "+": "Equal",
+    "{": "LeftBracket",
+    "}": "RightBracket",
+    "|": "Backslash",
+    ":": "Semicolon",
+    "\"": "Quote",
+    "<": "Comma",
+    ">": "Period",
+    "?": "Slash",
+    "~": "Backquote",
+  };
+
+  const specialKeyMap = {
+    "ENTER": "Enter",
+    " ": "Space",
+    "TAB": "Tab",
+    "SHIFT": "Shift",
+    "CTRL": "LeftControl",
+    "CONTROL": "LeftControl",
+    "ALT": "LeftAlt",
+    "ESC": "Escape",
+    "ESCAPE": "Escape",
+    "UP": "Up",
+    "DOWN": "Down",
+    "LEFT": "Left",
+    "RIGHT": "Right",
+    "BACKSPACE": "Backspace",
+    "DELETE": "Delete",
+    "CAPSLOCK": "CapsLock",
+    "ARROWRIGHT": "Right",
+    "ARROWLEFT": "Left", 
+    "ARROWUP": "Up",
+    "ARROWDOWN": "Down",
+    ".": "Period",
+    ",": "Comma",
+    "/": "Slash",
+    "\\": "Backslash",
+    "-": "Minus",
+    "=": "Equal",
+    ";": "Semicolon",
+    "'": "Quote",
+    "[": "LeftBracket",
+    "]": "RightBracket",
+    "`": "Backquote",
+  };
+
+  const trimmed = input;
+
+  // 1. Shifted symbols (like !@#)
+  if (shiftedMap[trimmed]) {
+    const keyName = shiftedMap[trimmed];
+    const key = Key[keyName];
+    if (!key) throw new Error(`Invalid shifted key: "${trimmed}"`);
+    return { key, shift: true };
+  }
+
+  // 2. Digits 0–9
+  if (digitToKeyMap[trimmed]) {
+    const keyName = digitToKeyMap[trimmed];
+    const key = Key[keyName];
+    if (!key) throw new Error(`Invalid digit key: "${trimmed}"`);
+    return { key, shift: false };
+  }
+
+  // 3. A–Z letters
+  if (/^[a-zA-Z]$/.test(trimmed)) {
+    const upper = trimmed.toUpperCase();
+    const key = Key[upper];
+    if (!key) throw new Error(`Invalid letter key: "${trimmed}"`);
+    const shift = trimmed !== upper;
+    return { key, shift };
+  }
+
+  // 4. Special keys
+  const upper = trimmed.toUpperCase();
+  const keyName = specialKeyMap[upper] || upper;
+  const key = Key[keyName];
+  if (!key) throw new Error(`Unknown key input: "${input}"`);
+  return { key, shift: false };
+}
 
 ipcMain.on("keydown", async (event, key) => {
   // Normalize the key to uppercase to match the specialKeyMap
   // This allows for case-insensitive matching, since NutJS keys are uppercase
   const normalized = key.toUpperCase();
-
-  const mappedKeyName = specialKeyMap[normalized] || normalized;
-
-  await keyboard.pressKey(Key[mappedKeyName]);
-  console.log("key pressed: ", Key[mappedKeyName]);
+  if (mappedKey(normalized).shift) {
+    await keyboard.pressKey(Key.Shift);
+  }
+  await keyboard.pressKey(mappedKey(normalized).key);
+  console.log("key pressed: ", mappedKey(normalized).key);
 });
 
 ipcMain.on("keyup", async (event, key) => {
   const normalized = key.toUpperCase();
 
-  const mappedKeyName = specialKeyMap[normalized] || normalized;
-
-  await keyboard.releaseKey(Key[mappedKeyName]);
-  console.log("key released: ", Key[mappedKeyName]);
+  if (mappedKey(normalized).shift) {
+    await keyboard.releaseKey(Key.Shift);
+  }
+  await keyboard.releaseKey(mappedKey(normalized).key);
+  console.log("key released: ", mappedKey(normalized).key);
 });
