@@ -202,9 +202,10 @@ ipcMain.on("keydown", async (event, key) => {
   // This allows for case-insensitive matching, since NutJS keys are uppercase
   const normalized = key.toUpperCase();
   if (mappedKey(normalized).shift) {
-    await keyboard.pressKey(Key.Shift);
+    await keyboard.pressKey(Key.Shift, mappedKey(normalized).key);
+  } else {
+    await keyboard.pressKey(mappedKey(normalized).key);
   }
-  await keyboard.pressKey(mappedKey(normalized).key);
   console.log("key pressed: ", mappedKey(normalized).key);
 });
 
@@ -212,8 +213,9 @@ ipcMain.on("keyup", async (event, key) => {
   const normalized = key.toUpperCase();
 
   if (mappedKey(normalized).shift) {
-    await keyboard.releaseKey(Key.Shift);
+    await keyboard.releaseKey(Key.Shift, mappedKey(normalized).key);
+  } else {
+    await keyboard.releaseKey(mappedKey(normalized).key);
   }
-  await keyboard.releaseKey(mappedKey(normalized).key);
   console.log("key released: ", mappedKey(normalized).key);
 });
