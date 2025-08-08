@@ -1,3 +1,4 @@
+// require('dotenv').config();
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Creating a bridge to expose the input API to the renderer process
@@ -8,4 +9,15 @@ contextBridge.exposeInMainWorld('inputApi', {
   releaseButton: (button) => ipcRenderer.send("mouseup", button),
   pressKey: (key) => ipcRenderer.send("keydown", key),
   releaseKey: (key) => ipcRenderer.send("keyup", key),
+  scroll: (delta) => ipcRenderer.send("scroll", delta),
+});
+
+contextBridge.exposeInMainWorld('env', {
+  APIKEY: process.env.APIKEY,
+  AUTHDOMAIN: process.env.AUTHDOMAIN,
+  PROJECTID: process.env.PROJECTID,
+  STORAGEBUCKET: process.env.STORAGEBUCKET,
+  MESSAGINGSENDERID: process.env.MESSAGINGSENDERID,
+  APPID: process.env.APPID,
+  MEASUREMENTID: process.env.MEASUREMENTID,
 });

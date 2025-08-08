@@ -218,3 +218,12 @@ ipcMain.on("keyup", async (event, key) => {
   }
   console.log("key released: ", mappedKey(normalized).key);
 });
+
+ipcMain.on("scroll", async (event, delta) => {
+  if (delta <= 0) {
+    await mouse.scrollDown(Math.abs(delta));
+  } else {
+    await mouse.scrollUp(delta);
+  }
+  console.log("mouse scrolled: ", delta);
+});

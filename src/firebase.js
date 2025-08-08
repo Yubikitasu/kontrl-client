@@ -100,6 +100,10 @@ dataStream.onmessage = (e) => {
   if (inputInfo.type === "keyup") {
     window.inputApi.releaseKey(inputInfo.key);
   }
+
+  if (inputInfo.type === "scroll") {
+    window.inputApi.scroll(inputInfo.delta);
+  }
 }
 
 // Create an offer and set it as the local description
